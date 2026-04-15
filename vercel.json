@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "env": {
+    "COGNITO_USER_POOL_ID": "mock-pool-id",
+    "COGNITO_CLIENT_ID": "mock-client-id",
+    "DYNAMODB_TABLE_NAME": "FlowVolt-Transactions"
+  }
+}
