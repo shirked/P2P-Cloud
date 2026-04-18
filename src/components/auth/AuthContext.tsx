@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log("[Auth Flow] isCloudLive flag evaluated to:", isCloudLive);
     if (isCloudLive) {
       checkSession();
 
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return () => unsubscribe();
     } else {
       // Mock Mode
+      console.log("[Auth Flow] Fallback Mock Mode Initiated.");
       setUserId("mock-user-42");
       setIsLoading(false);
     }
@@ -67,11 +69,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = () => {
+    console.log("[Auth Flow] Login Button Clicked! Cloud Live:", isCloudLive);
     if (isCloudLive) {
       // Trigger Cognito Hosted UI / OAuth flow
-      signInWithRedirect();
+      console.log("[Auth Flow] Triggering AWS Cognito signInWithRedirect...");
+      try {
+        signInWithRedirect();
+      } catch (e) {
+        console.error("[Auth Flow] Failed to trigger redirect:", e);
+      }
     } else {
-      console.log("[Mock] Login triggered.");
+      console.log("[Auth Flow] Mock Login triggered.");
       setUserId("mock-user-42");
     }
   };
