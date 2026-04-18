@@ -6,24 +6,44 @@ const CLIENT_ID = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || "";
 export function configureAmplify() {
   if (USER_POOL_ID && CLIENT_ID) {
     const isLocalhost = typeof window !== "undefined" && window.location.hostname === "localhost";
-    const redirectUrl = isLocalhost ? "http://localhost:3000/" : "https://flowvolt-frontend.vercel.app/";
+    
+    // dynamically detect real Vercel URL if possible, otherwise fallback
+    let currentOrigin = "https://flowvolt-frontend.vercel.app/";
+    if (typeof window !== "undefined") {
+      currentOrigin = window.location.origin + "/";
+    }
+    const redirectUrl = isLocalhost ? "http://localhost:3000/" : currentOrigin;
 
-    Amplify.configure({
-      Auth: {
-        Cognito: {
-          userPoolId: USER_POOL_ID,
-          userPoolClientId: CLIENT_ID,
-          loginWith: {
-            oauth: {
-              domain: process.env.NEXT_PUBLIC_COGNITO_DOMAIN || "", // Should look like: your-app.auth.us-east-1.amazoncognito.com
-              scopes: ["email", "openid", "profile"],
-              redirectSignIn: [redirectUrl],
-              redirectSignOut: [redirectUrl],
-              responseType: "code",
+    // Sanitize domain (remove https:// and trailing slashes) if user pasted it wrong
+    let rawDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || "";
+    const cleanDomain = rawDomain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+    console.log("[Amplify Config] Initializing with Redirect:", redirectUrl);
+    console.log("[Amplify Config] Using Domain:", cleanDomain);
+
+    try {
+      Amplify.configure({
+        Auth: {
+          Cognito: {
+            userPoolId: USER_POOL_ID,
+            userPoolClientId: CLIENT_ID,
+            loginWith: {
+              oauth: {
+                domain: cleanDomain,
+                scopes: ["email", "openid", "profile"],
+                redirectSignIn: [redirectUrl],
+                redirectSignOut: [redirectUrl],
+                responseType: "code",
+              },
             },
           },
         },
-      },
-    });
+      });
+      console.log("[Amplify Config] Initialization successful.");
+    } catch (e) {
+      console.error("[Amplify Config] Initialization failed:", e);
+    }
+  } else {
+    console.warn("[Amplify Config] Missing User Pool ID or Client ID. Skipping configuration.");
   }
 }
