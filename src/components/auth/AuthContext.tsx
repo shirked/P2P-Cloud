@@ -5,6 +5,14 @@ import { getCurrentUser, signInWithRedirect, signOut as amplifySignOut } from "a
 import { Hub } from "aws-amplify/utils";
 import { configureAmplify } from "@/lib/amplify-config";
 
+// Detect cloud mode at module level
+const isCloudLive = !!process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
+
+// Configure Amplify synchronously outside the React tree for Next.js App Router compatibility
+if (isCloudLive) {
+  configureAmplify();
+}
+
 interface AuthContextType {
   userId: string | null;
   isAuthenticated: boolean;
@@ -27,26 +35,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isCloudLive = !!process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
-
   useEffect(() => {
     if (isCloudLive) {
-      configureAmplify();
       checkSession();
 
-      Hub.listen("auth", (data) => {
+      const unsubscribe = Hub.listen("auth", (data) => {
         if (data.payload.event === "signedIn") {
           checkSession();
         } else if (data.payload.event === "signedOut") {
           setUserId(null);
         }
       });
+
+      return () => unsubscribe();
     } else {
       // Mock Mode
       setUserId("mock-user-42");
       setIsLoading(false);
     }
-  }, [isCloudLive]);
+  }, []);
 
   const checkSession = async () => {
     try {
