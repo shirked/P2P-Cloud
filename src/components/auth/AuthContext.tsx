@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { getCurrentUser, signInWithRedirect, signOut as amplifySignOut } from "aws-amplify/auth";
+import { getCurrentUser, fetchAuthSession, signInWithRedirect, signOut as amplifySignOut } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { configureAmplify } from "@/lib/amplify-config";
 
@@ -9,7 +9,7 @@ import { configureAmplify } from "@/lib/amplify-config";
 const isCloudLive = !!process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
 
 // Configure Amplify synchronously outside the React tree for Next.js App Router compatibility
-if (isCloudLive) {
+if (typeof window !== "undefined" && isCloudLive) {
   configureAmplify();
 }
 
@@ -59,9 +59,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkSession = async () => {
     try {
-      const user = await getCurrentUser();
-      setUserId(user.username || user.userId);
+      const { tokens } = await fetchAuthSession();
+      if (tokens?.accessToken) {
+        // Support environments where only 'email' scope is checked (no idToken)
+        const username = (tokens.idToken?.payload?.email as string) || (tokens.idToken?.payload?.['cognito:username'] as string) || "Authenticated Volt User";
+        setUserId(username);
+      } else {
+        setUserId(null);
+      }
     } catch (err) {
+      console.warn("[Auth Flow] checkSession error:", err);
       setUserId(null);
     } finally {
       setIsLoading(false);
@@ -86,8 +93,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     if (isCloudLive) {
-      await amplifySignOut();
-      setUserId(null);
+      try {
+        await amplifySignOut();
+      } catch (e) {
+        console.error("[Auth Flow] Sign out failed:", e);
+      } finally {
+        setUserId(null);
+      }
     } else {
       console.log("[Mock] Logout triggered.");
       setUserId(null);
