@@ -11,17 +11,18 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     // 1. Check if Amplify has already consumed the code and initialized session
-    const verifySession = async () => {
+    const checkInterval = setInterval(async () => {
       try {
         const { tokens } = await fetchAuthSession();
         if (tokens?.accessToken) {
-            router.replace('/');
+          clearInterval(checkInterval);
+          router.replace('/');
         }
       } catch (e) {
-        // Session not ready yet, wait for Hub listener
+        // Still processing OAuth callback...
+        console.log("Waiting for auth token exchange...");
       }
-    };
-    verifySession();
+    }, 1000);
 
     // 2. Listen for the code exchange completion
     const unsubscribe = Hub.listen("auth", (data) => {
@@ -33,7 +34,10 @@ export default function AuthCallbackPage() {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearInterval(checkInterval);
+      unsubscribe();
+    };
   }, [router]);
 
   return (
