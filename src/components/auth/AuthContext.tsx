@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       checkSession();
 
       const unsubscribe = Hub.listen("auth", (data) => {
-        if (data.payload.event === "signedIn") {
+        if (data.payload.event === "signedIn" || data.payload.event === "signInWithRedirect") {
           checkSession();
         } else if (data.payload.event === "signedOut") {
           setUserId(null);

@@ -25,7 +25,7 @@ export default function AuthCallbackPage() {
 
     // 2. Listen for the code exchange completion
     const unsubscribe = Hub.listen("auth", (data) => {
-      if (data.payload.event === "signedIn") {
+      if (data.payload.event === "signInWithRedirect") {
         router.replace("/");
       } else if (data.payload.event === "signInWithRedirect_failure") {
         console.error("Auth routing failed:", data.payload.data);
