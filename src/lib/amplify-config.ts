@@ -20,7 +20,7 @@ export function configureAmplify() {
     let rawDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || "";
     const cleanDomain = rawDomain.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
-    console.log("[Amplify Config] Initializing with Redirect:", redirectUrl);
+    console.log("[Amplify Config] Initializing with Redirect:", redirectSignInUrl);
     console.log("[Amplify Config] Using Domain:", cleanDomain);
 
     try {
