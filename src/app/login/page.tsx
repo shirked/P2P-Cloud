@@ -1,35 +1,38 @@
 "use client";
 
 import { useEffect } from "react";
-import { signInWithRedirect } from "aws-amplify/auth";
-import { Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Authenticator } from "@aws-amplify/ui-react";
+import "@aws-amplify/ui-react/styles.css";
+import { fetchAuthSession } from "aws-amplify/auth";
+import { useAuth } from "@/components/auth/AuthContext";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { userId } = useAuth();
+
   useEffect(() => {
-    // Attempt redirect after a brief visual delay to ensure config loads
-    const timer = setTimeout(() => {
-      try {
-        signInWithRedirect();
-      } catch (err) {
-        console.error("Failed to redirect to Hosted UI", err);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    // If the AuthContext picks up that we have a userId, we are logged in
+    if (userId) {
+      router.replace("/");
+    }
+  }, [userId, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <div className="glass-card p-10 rounded-3xl flex flex-col items-center space-y-6 max-w-md w-full text-center border border-[rgba(255,255,255,0.05)] shadow-2xl">
-        <div className="h-16 w-16 bg-emerald-500/10 rounded-full flex items-center justify-center border border-emerald-500/20">
-          <Zap className="h-8 w-8 text-emerald-400 animate-pulse" />
-        </div>
-        <h1 className="text-2xl font-bold text-white">Authenticating...</h1>
-        <p className="text-gray-400 text-sm">Transferring you to the secure AWS Cognito terminal.</p>
-        
-        <div className="w-full h-1 bg-white/10 rounded overflow-hidden mt-4">
-          <div className="h-full bg-emerald-500 w-1/3 animate-ping"></div>
-        </div>
-      </div>
+    <div className="flex h-screen items-center justify-center bg-[#0B0C10]">
+      <Authenticator 
+        variation="modal"
+        components={{
+          Header() {
+            return (
+              <div className="text-center pb-4">
+                <h1 className="text-3xl font-bold text-white tracking-widest"><span className="text-cyan-400 font-black">FLOW</span>VOLT</h1>
+                <p className="text-gray-400 text-sm mt-2">Sign in to your energy dashboard</p>
+              </div>
+            );
+          }
+        }}
+      />
     </div>
   );
 }
