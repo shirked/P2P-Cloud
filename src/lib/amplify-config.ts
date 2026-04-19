@@ -12,7 +12,9 @@ export function configureAmplify() {
     if (typeof window !== "undefined") {
       currentOrigin = window.location.origin + "/";
     }
-    const redirectUrl = isLocalhost ? "http://localhost:3000/" : currentOrigin;
+    const baseUrl = isLocalhost ? "http://localhost:3000" : currentOrigin.replace(/\/$/, "");
+    const redirectSignInUrl = `${baseUrl}/auth/callback`;
+    const redirectSignOutUrl = `${baseUrl}/`;
 
     // Sanitize domain (remove https:// and trailing slashes) if user pasted it wrong
     let rawDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || "";
@@ -31,8 +33,8 @@ export function configureAmplify() {
               oauth: {
                 domain: cleanDomain,
                 scopes: ["email", "openid", "profile"],
-                redirectSignIn: [redirectUrl],
-                redirectSignOut: [redirectUrl],
+                redirectSignIn: [redirectSignInUrl],
+                redirectSignOut: [redirectSignOutUrl],
                 responseType: "code",
               },
             },

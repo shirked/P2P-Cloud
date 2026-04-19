@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { getCurrentUser, fetchAuthSession, signInWithRedirect, signOut as amplifySignOut } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { configureAmplify } from "@/lib/amplify-config";
@@ -34,6 +35,7 @@ export const useAuth = () => useContext(AuthContext);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     console.log("[Auth Flow] isCloudLive flag evaluated to:", isCloudLive);
@@ -76,15 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = () => {
-    console.log("[Auth Flow] Login Button Clicked! Cloud Live:", isCloudLive);
     if (isCloudLive) {
-      // Trigger Cognito Hosted UI / OAuth flow
-      console.log("[Auth Flow] Triggering AWS Cognito signInWithRedirect...");
-      try {
-        signInWithRedirect();
-      } catch (e) {
-        console.error("[Auth Flow] Failed to trigger redirect:", e);
-      }
+      router.push('/login');
     } else {
       console.log("[Auth Flow] Mock Login triggered.");
       setUserId("mock-user-42");
@@ -99,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("[Auth Flow] Sign out failed:", e);
       } finally {
         setUserId(null);
+        router.push('/');
       }
     } else {
       console.log("[Mock] Logout triggered.");
