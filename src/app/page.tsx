@@ -39,11 +39,11 @@ export default function Dashboard() {
           { title: "Consumed", val: currentCons.toFixed(1), unit: "kWh", icon: BatteryCharging, color: "text-amber-400", bg: "bg-[rgba(245,158,11,0.1)]", trend: "-2%" },
           { title: "Net Export", val: net.toFixed(1), unit: "kWh", icon: net >= 0 ? ArrowUpRight : ArrowDownRight, color: net >= 0 ? "text-cyan-400" : "text-rose-400", bg: net >= 0 ? "bg-[rgba(6,182,212,0.1)]" : "bg-[rgba(244,63,94,0.1)]", trend: "+5%" }
         ].map((stat, i) => (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            key={i} 
+            key={i}
             className="glass-card rounded-2xl p-6 relative overflow-hidden"
           >
             <div className="flex justify-between items-start mb-4">
@@ -64,13 +64,13 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-            
+
             <div className={`absolute -bottom-6 -right-6 w-24 h-24 blur-3xl opacity-20 ${stat.bg.replace('0.1', '1')}`} />
           </motion.div>
         ))}
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -84,18 +84,18 @@ export default function Dashboard() {
             <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorGen" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorCons" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}k`} />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
                 itemStyle={{ color: '#fff' }}
               />
