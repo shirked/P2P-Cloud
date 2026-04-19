@@ -19,6 +19,8 @@ export function configureAmplify() {
       console.error("[Amplify Config] Initialization failed:", e);
     }
   } else {
-    console.warn("[Amplify Config] Missing User Pool ID or Client ID. Skipping configuration.");
+    console.error("[Amplify Config] CRITICAL ERROR: Missing Cognito Environment Variables!");
+    console.error("Pool ID:", USER_POOL_ID ? "PRESENT" : "MISSING");
+    console.error("Client ID:", CLIENT_ID ? "PRESENT" : "MISSING");
   }
 }
