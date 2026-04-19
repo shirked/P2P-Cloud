@@ -30,7 +30,7 @@ export function configureAmplify() {
             loginWith: {
               oauth: {
                 domain: cleanDomain,
-                scopes: ["email"],
+                scopes: ["email", "openid", "profile"],
                 redirectSignIn: [redirectUrl],
                 redirectSignOut: [redirectUrl],
                 responseType: "code",
