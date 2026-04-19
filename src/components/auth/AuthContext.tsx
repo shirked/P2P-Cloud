@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, fetchAuthSession, signInWithRedirect, signOut as amplifySignOut } from "aws-amplify/auth";
+import { fetchAuthSession, signOut as amplifySignOut } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { configureAmplify } from "@/lib/amplify-config";
 
@@ -38,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("[Auth Flow] isCloudLive flag evaluated to:", isCloudLive);
     if (isCloudLive) {
       checkSession();
 
@@ -52,8 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return () => unsubscribe();
     } else {
-      // Mock Mode
-      console.log("[Auth Flow] Fallback Mock Mode Initiated.");
       setUserId("mock-user-42");
       setIsLoading(false);
     }
@@ -70,7 +67,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserId(null);
       }
     } catch (err) {
-      console.warn("[Auth Flow] checkSession error:", err);
       setUserId(null);
     } finally {
       setIsLoading(false);
@@ -81,7 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isCloudLive) {
       router.push('/login');
     } else {
-      console.log("[Auth Flow] Mock Login triggered.");
       setUserId("mock-user-42");
     }
   };
@@ -97,7 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.push('/');
       }
     } else {
-      console.log("[Mock] Logout triggered.");
       setUserId(null);
     }
   };
