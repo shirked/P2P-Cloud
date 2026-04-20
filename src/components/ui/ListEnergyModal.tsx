@@ -1,8 +1,12 @@
 "use client";
 
-import { X, Zap, DollarSign } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { X, Zap, DollarSign, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { listEnergyUnit } from "@/lib/api";
+import { fetchAuthSession } from "aws-amplify/auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/components/auth/AuthContext";
 
 interface Props {
   isOpen: boolean;
@@ -10,14 +14,48 @@ interface Props {
 }
 
 export default function ListEnergyModal({ isOpen, onClose }: Props) {
+  const { userId } = useAuth();
+  const queryClient = useQueryClient();
   const [amount, setAmount] = useState<string>("1.0");
   const [price, setPrice] = useState<string>("0.10");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Logic to call AWS Lambda would go here
-    console.log("Listing energy:", { amount, price });
-    onClose();
+    console.log("[Sell] Submit clicked");
+    setIsSubmitting(true);
+
+    try {
+      const session = await fetchAuthSession();
+      console.log("[Sell] Session fetched");
+      const token = session.tokens?.idToken?.toString() || "";
+
+      if (!token) throw new Error("No idToken found");
+
+      console.log("[Sell] Calling API now...");
+      const success = await listEnergyUnit(
+        parseFloat(amount), 
+        parseFloat(price), 
+        token
+      );
+
+      if (success) {
+        console.log("[Sell] Listing created successfully!");
+        // Refresh the marketplace data
+        queryClient.invalidateQueries({ queryKey: ['marketplace', userId] });
+        onClose();
+        // Reset fields
+        setAmount("1.0");
+        setPrice("0.10");
+      } else {
+        throw new Error("API indicated failure without throwing");
+      }
+    } catch (error) {
+      console.error("[Sell] CRITICAL UI ERROR:", error);
+      alert("Failed to create listing. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -88,9 +126,17 @@ export default function ListEnergyModal({ isOpen, onClose }: Props) {
 
                 <button
                   type="submit"
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                  disabled={isSubmitting}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Create Listing
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Creating Listing...
+                    </>
+                  ) : (
+                    "Create Listing"
+                  )}
                 </button>
               </form>
             </motion.div>

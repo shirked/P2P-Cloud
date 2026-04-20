@@ -129,3 +129,27 @@ export const fetchAvailableUnits = async (token: string): Promise<Transaction[]>
     return [];
   }
 };
+export const listEnergyUnit = async (amount: number, price: number, token: string): Promise<boolean> => {
+  if (!LAMBDA_URL) {
+    console.error("[API] NEXT_PUBLIC_LAMBDA_URL is missing. Listing failed.");
+    return false;
+  }
+
+  try {
+    const res = await fetch(`${LAMBDA_URL}/sell`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ amount, price })
+    });
+
+    if (!res.ok) throw new Error(`Listing failed with status ${res.status}`);
+    
+    return res.status === 201 || res.status === 200;
+  } catch (error) {
+    console.error("[API] Error creating listing:", error);
+    return false;
+  }
+};
