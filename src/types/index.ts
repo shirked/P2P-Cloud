@@ -6,6 +6,7 @@ export interface TelemetryValue {
 export interface EnergyData {
   generated: TelemetryValue;
   consumed: TelemetryValue;
+  totalStorage: TelemetryValue;
   time?: string;
 }
 

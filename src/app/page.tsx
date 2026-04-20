@@ -39,6 +39,7 @@ export default function Dashboard() {
   // Handle single-object telemetry with optional chaining
   const currentGen = data?.generated?.value ?? 0;
   const currentCons = data?.consumed?.value ?? 0;
+  const currentStorage = data?.totalStorage?.value ?? 0;
   const net = currentGen - currentCons;
 
   // Calculate Total Energy from Ledger (Cumulative Storage)
@@ -61,7 +62,7 @@ export default function Dashboard() {
           { title: "Generated", val: currentGen.toFixed(1), unit: "kWh", icon: Zap, color: "text-emerald-400", bg: "bg-[rgba(16,185,129,0.1)]", trend: "+12%" },
           { title: "Consumed", val: currentCons.toFixed(1), unit: "kWh", icon: BatteryCharging, color: "text-amber-400", bg: "bg-[rgba(245,158,11,0.1)]", trend: "-2%" },
           { title: "Net Export", val: net.toFixed(1), unit: "kWh", icon: net >= 0 ? ArrowUpRight : ArrowDownRight, color: net >= 0 ? "text-cyan-400" : "text-rose-400", bg: net >= 0 ? "bg-[rgba(6,182,212,0.1)]" : "bg-[rgba(244,63,94,0.1)]", trend: "+5%" },
-          { title: "Total Storage", val: totalEnergy.toFixed(1), unit: "kWh", icon: Database, color: "text-indigo-400", bg: "bg-[rgba(129,140,248,0.1)]", trend: "Lifetime" }
+          { title: "Total Storage", val: currentStorage.toFixed(1), unit: "kWh", icon: Database, color: "text-indigo-400", bg: "bg-[rgba(129,140,248,0.1)]", trend: "Live Balance" }
         ].map((stat, i) => (
           <motion.div
             initial={{ opacity: 0, y: 20 }}

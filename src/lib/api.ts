@@ -9,6 +9,7 @@ const LAMBDA_URL = process.env.NEXT_PUBLIC_LAMBDA_URL?.replace(/\/$/, "");
 const MOCK_ENERGY: EnergyData = {
   generated: { value: 6.0, unit: "kWh" },
   consumed: { value: 2.8, unit: "kWh" },
+  totalStorage: { value: 45.2, unit: "kWh" },
   time: "12:00"
 };
 
@@ -35,6 +36,7 @@ export const fetchEnergyTelemetry = async (): Promise<EnergyData | null> => {
       return {
         generated: { value: Number(data.generated?.value || 0), unit: data.generated?.unit || "kWh" },
         consumed: { value: Number(data.consumed?.value || 0), unit: data.consumed?.unit || "kWh" },
+        totalStorage: { value: Number(data.totalStorage?.value || 0), unit: data.totalStorage?.unit || "kWh" },
         time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
     } catch (err) {
