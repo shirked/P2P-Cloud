@@ -70,17 +70,31 @@ export const fetchUserLedger = async (token: string): Promise<Transaction[]> => 
     const data = await res.json();
 
     // Data Sanitization & Mapping: energyKWh -> amount, timestamp -> professional date
-    return data.map((item: any) => ({
-      ...item,
-      id: item.transactionId || item.id,
-      amount: Number(item.energyKWh || item.amount || 0),
-      price: Number(item.price || 0),
-      type: item.type?.toLowerCase() || "buy",
-      status: item.status || "Settled",
-      date: item.timestamp 
-        ? new Date(item.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) 
-        : (item.date || new Date().toISOString())
-    }));
+    return data.map((item: any) => {
+      const type = item.type?.toLowerCase() || "buy";
+      let activity = item.activity;
+      
+      if (!activity) {
+        if (type === "buy") activity = "Energy Purchase";
+        else if (type === "sell") activity = "Marketplace Sale";
+        else if (type === "deposit") activity = "Solar Generation";
+        else if (type === "withdraw") activity = "Grid Export";
+        else activity = "Inter-Node Transfer";
+      }
+
+      return {
+        ...item,
+        id: item.transactionId || item.id,
+        amount: Number(item.energyKWh || item.amount || 0),
+        price: Number(item.price || 0),
+        type,
+        activity,
+        status: item.status || "Settled",
+        date: item.timestamp 
+          ? new Date(item.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) 
+          : (item.date || new Date().toISOString())
+      };
+    });
   } catch (error) {
     console.error("[API] Error fetching ledger:", error);
     return [];
