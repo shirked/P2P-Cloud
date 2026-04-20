@@ -1,23 +1,4 @@
-"use client";
-
-// AWS Lambda REST API & Mock integrations
-
-export interface EnergyData {
-  time: string;
-  generated: number;
-  consumed: number;
-}
-
-export interface Transaction {
-  id: string;
-  type: "buy" | "sell" | "deposit" | "withdraw";
-  amount: number;
-  price: number;
-  status: "Settled" | "Pending" | "Available";
-  date: string;
-  sellerId?: string;
-  buyerId?: string;
-}
+import { EnergyData, Transaction } from "@/types";
 
 const LAMBDA_URL = process.env.NEXT_PUBLIC_LAMBDA_URL;
 
@@ -39,12 +20,7 @@ const MOCK_LEDGER: Transaction[] = [
   { id: "tx-102", type: "deposit", amount: 50.0, price: 1.0, status: "Settled", date: "2026-04-10T14:20:00Z" },
 ];
 
-const MOCK_UNITS: Transaction[] = [
-  { id: "mk-1", type: "sell", amount: 1.0, price: 0.10, status: "Available", date: "2026-04-15T10:00:00Z", sellerId: "user-12" },
-  { id: "mk-2", type: "sell", amount: 1.0, price: 0.11, status: "Available", date: "2026-04-15T09:45:00Z", sellerId: "user-78" },
-  { id: "mk-3", type: "sell", amount: 5.0, price: 0.09, status: "Available", date: "2026-04-15T11:20:00Z", sellerId: "user-88" },
-  { id: "mk-4", type: "sell", amount: 2.5, price: 0.12, status: "Available", date: "2026-04-15T12:00:00Z", sellerId: "user-33" },
-];
+// --- Mock Data (Legacy fallbacks for internal features) ---
 
 // --- Hybrid Fetchers ---
 
@@ -70,13 +46,34 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
   return MOCK_LEDGER;
 };
 
-export const fetchAvailableUnits = async (): Promise<Transaction[]> => {
-  if (LAMBDA_URL) {
-    const res = await fetch(`${LAMBDA_URL}/marketplace`);
-    if (!res.ok) throw new Error("Failed to fetch marketplace units");
-    return res.json();
+export const fetchAvailableUnits = async (token: string): Promise<Transaction[]> => {
+  if (!LAMBDA_URL) {
+    console.error("[API] NEXT_PUBLIC_LAMBDA_URL is missing. Marketplace will be empty.");
+    return [];
   }
-  // Fallback to Mock
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return MOCK_UNITS;
+
+  try {
+    const res = await fetch(`${LAMBDA_URL}/marketplace`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
+
+    const data = await res.json();
+    
+    // Data Sanitization: Map listingId to id and ensure numeric consistency
+    return data.map((item: any) => ({
+      ...item,
+      id: item.listingId, 
+      amount: Number(item.amount),
+      price: Number(item.price)
+    }));
+  } catch (error) {
+    console.error("[API] Error fetching marketplace units:", error);
+    return [];
+  }
 };

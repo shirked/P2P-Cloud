@@ -1,20 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { fetchAvailableUnits, Transaction } from "@/lib/api";
+import { fetchAvailableUnits } from "@/lib/api";
+import { Transaction } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { Zap, Plus, Search, Filter, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
+import { fetchAuthSession } from "aws-amplify/auth";
+import { useAuth } from "@/components/auth/AuthContext";
 import ListEnergyModal from "@/components/ui/ListEnergyModal";
 import PurchaseModal from "@/components/ui/PurchaseModal";
-
 export default function Marketplace() {
+  const { userId, isAuthenticated } = useAuth();
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<Transaction | null>(null);
 
   const { data: units = [], isLoading, isError } = useQuery({
-    queryKey: ['marketplace'],
-    queryFn: fetchAvailableUnits,
+    queryKey: ['marketplace', userId],
+    queryFn: async () => {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString() || "";
+      if (!token) throw new Error("No authentication token available");
+      return fetchAvailableUnits(token);
+    },
+    enabled: isAuthenticated,
   });
 
   return (
