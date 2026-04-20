@@ -2,7 +2,7 @@
 
 import { X, ShoppingBag, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Transaction } from "@/lib/api";
+import { Transaction } from "@/types";
 
 interface Props {
   isOpen: boolean;

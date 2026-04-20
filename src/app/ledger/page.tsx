@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchTransactions, Transaction } from "@/lib/api";
+import { fetchTransactions } from "@/lib/api";
+import { Transaction } from "@/types";
 import { ArrowDownLeft, ArrowUpRight, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
