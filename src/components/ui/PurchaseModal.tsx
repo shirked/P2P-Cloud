@@ -37,7 +37,7 @@ export default function PurchaseModal({ isOpen, onClose, unit }: Props) {
       if (!token) throw new Error("No authentication token available");
 
       console.log("[Marketplace] Executing live purchase for ID:", unit.id);
-      const transactionId = await purchaseEnergyUnit(unit.id, token);
+      const transactionId = await purchaseEnergyUnit(unit.id, unit.timestamp || 0, token);
 
       if (transactionId) {
         console.log("[Marketplace] Purchase successful! TX ID:", transactionId);

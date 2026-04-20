@@ -16,6 +16,7 @@ export interface Transaction {
   price: number;
   status: "Settled" | "Pending" | "Available" | "Completed";
   date: string;
+  timestamp?: number | string;
   sellerId?: string;
   buyerId?: string;
 }

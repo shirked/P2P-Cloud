@@ -154,7 +154,7 @@ export const listEnergyUnit = async (amount: number, price: number, token: strin
   }
 };
 
-export const purchaseEnergyUnit = async (listingId: string, token: string): Promise<string | null> => {
+export const purchaseEnergyUnit = async (listingId: string, timestamp: string | number, token: string): Promise<string | null> => {
   if (!LAMBDA_URL) {
     console.error("[API] NEXT_PUBLIC_LAMBDA_URL is missing. Purchase failed.");
     return null;
@@ -167,7 +167,7 @@ export const purchaseEnergyUnit = async (listingId: string, token: string): Prom
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ listingId })
+      body: JSON.stringify({ listingId, timestamp })
     });
 
     if (!res.ok) throw new Error(`Purchase failed with status ${res.status}`);
