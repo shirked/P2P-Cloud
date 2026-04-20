@@ -17,7 +17,7 @@ export default function PurchaseModal({ isOpen, onClose, unit }: Props) {
 
   const handleConfirm = () => {
     // Logic to call AWS Lambda / DynamoDB update would go here
-    console.log("Confirming purchase:", unit.id);
+    console.log("[Marketplace] Confirming purchase for ID:", unit.id);
     onClose();
   };
 

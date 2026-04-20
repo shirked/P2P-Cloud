@@ -36,13 +36,18 @@ export default function Dashboard() {
     );
   }
 
-  const lastEntry = data?.[data.length - 1];
-  const currentGen = lastEntry?.generated ?? 0;
-  const currentCons = lastEntry?.consumed ?? 0;
+  // Handle single-object telemetry with optional chaining
+  const currentGen = data?.generated?.value ?? 0;
+  const currentCons = data?.consumed?.value ?? 0;
   const net = currentGen - currentCons;
 
   // Calculate Total Energy from Ledger (Cumulative Storage)
   const totalEnergy = ledger.reduce((acc, tx) => acc + (tx.amount || 0), 0);
+
+  // Fake Array Trick: Wrap single point in an array for AreaChart continuity
+  const chartData = data ? [
+    { ...data, time: "Live", generated: currentGen, consumed: currentCons }
+  ] : [];
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
@@ -100,7 +105,7 @@ export default function Dashboard() {
           <div className="w-full h-full bg-white/5 rounded-xl animate-pulse" />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorGen" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
@@ -113,7 +118,7 @@ export default function Dashboard() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}k`} />
+              <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
               <Tooltip
                 contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
                 itemStyle={{ color: '#fff' }}

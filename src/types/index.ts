@@ -1,15 +1,20 @@
+export interface TelemetryValue {
+  value: number;
+  unit: string;
+}
+
 export interface EnergyData {
-  time: string;
-  generated: number;
-  consumed: number;
+  generated: TelemetryValue;
+  consumed: TelemetryValue;
+  time?: string;
 }
 
 export interface Transaction {
-  id: string; // Maps to listingId in DynamoDB
+  id: string; // Dynamic ID (listingId or custom)
   type: "buy" | "sell" | "deposit" | "withdraw";
   amount: number;
   price: number;
-  status: "Settled" | "Pending" | "Available";
+  status: "Settled" | "Pending" | "Available" | "Completed";
   date: string;
   sellerId?: string;
   buyerId?: string;

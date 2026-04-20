@@ -4,15 +4,13 @@ const LAMBDA_URL = process.env.NEXT_PUBLIC_LAMBDA_URL?.replace(/\/$/, "");
 
 // --- Mock Data ---
 
-const MOCK_ENERGY: EnergyData[] = [
-  { time: "08:00", generated: 2.4, consumed: 1.2 },
-  { time: "09:00", generated: 3.1, consumed: 1.5 },
-  { time: "10:00", generated: 4.5, consumed: 2.1 },
-  { time: "11:00", generated: 5.2, consumed: 2.4 },
-  { time: "12:00", generated: 6.0, consumed: 2.8 },
-  { time: "13:00", generated: 5.8, consumed: 3.1 },
-  { time: "14:00", generated: 4.9, consumed: 2.9 },
-];
+// --- Mock Data ---
+
+const MOCK_ENERGY: EnergyData = {
+  generated: { value: 6.0, unit: "kWh" },
+  consumed: { value: 2.8, unit: "kWh" },
+  time: "12:00"
+};
 
 const MOCK_LEDGER: Transaction[] = [
   { id: "tx-100", type: "buy", amount: 1.5, price: 0.12, status: "Settled", date: "2026-04-14T10:30:00Z", sellerId: "user-44" },
@@ -24,7 +22,7 @@ const MOCK_LEDGER: Transaction[] = [
 
 // --- Hybrid Fetchers ---
 
-export const fetchEnergyTelemetry = async (): Promise<EnergyData[]> => {
+export const fetchEnergyTelemetry = async (): Promise<EnergyData | null> => {
   if (LAMBDA_URL) {
     try {
       const res = await fetch(`${LAMBDA_URL}/telemetry`);
@@ -33,16 +31,15 @@ export const fetchEnergyTelemetry = async (): Promise<EnergyData[]> => {
       
       console.log("[API] Telemetry Data Received:", data);
 
-      // Defensive check: Ensure data is an array
-      if (!Array.isArray(data)) {
-        console.warn("[API] Unexpected telemetry structure. Returning empty array.");
-        return [];
-      }
-
-      return data;
+      // Map structure { generated: { value, unit }, ... }
+      return {
+        generated: { value: Number(data.generated?.value || 0), unit: data.generated?.unit || "kWh" },
+        consumed: { value: Number(data.consumed?.value || 0), unit: data.consumed?.unit || "kWh" },
+        time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
     } catch (err) {
       console.error("[API] Telemetry fetch error:", err);
-      return [];
+      return null;
     }
   }
   // Fallback to Mock
@@ -70,7 +67,7 @@ export const fetchUserLedger = async (token: string): Promise<Transaction[]> => 
 
     const data = await res.json();
 
-    // Data Sanitization & Mapping: energyKWh -> amount
+    // Data Sanitization & Mapping: energyKWh -> amount, timestamp -> professional date
     return data.map((item: any) => ({
       ...item,
       id: item.transactionId || item.id,
@@ -78,7 +75,9 @@ export const fetchUserLedger = async (token: string): Promise<Transaction[]> => 
       price: Number(item.price || 0),
       type: item.type?.toLowerCase() || "buy",
       status: item.status || "Settled",
-      date: item.date || item.timestamp || new Date().toISOString()
+      date: item.timestamp 
+        ? new Date(item.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) 
+        : (item.date || new Date().toISOString())
     }));
   } catch (error) {
     console.error("[API] Error fetching ledger:", error);
@@ -118,10 +117,10 @@ export const fetchAvailableUnits = async (token: string): Promise<Transaction[]>
 
     const data = await res.json();
     
-    // Data Sanitization: Map listingId to id and ensure numeric consistency
+    // Data Sanitization: Map id and ensure numeric consistency
     return data.map((item: any) => ({
       ...item,
-      id: item.listingId, 
+      id: item.id || item.listingId, // Prioritize 'id' as per Cloud Architect instructions
       amount: Number(item.amount),
       price: Number(item.price)
     }));

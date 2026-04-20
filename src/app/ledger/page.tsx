@@ -76,13 +76,13 @@ export default function Ledger() {
                     {(tx.amount * tx.price).toFixed(2)} <span className="text-xs text-gray-500">cR</span>
                   </td>
                   <td className="py-4 px-6 whitespace-nowrap text-sm text-gray-400">
-                    {new Date(tx.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                    {tx.date}
                   </td>
                   <td className="py-4 px-6 whitespace-nowrap">
                     <span className={clsx(
-                      "px-2.5 py-1 text-xs font-medium rounded-full",
-                      tx.status === "Settled" && "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-                      tx.status === "Pending" && "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+                      "px-2.5 py-1 text-xs font-semibold rounded-full uppercase tracking-wider",
+                      (tx.status === "Settled" || tx.status === "Completed" || tx.status.toUpperCase() === "COMPLETED") && "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+                      (tx.status === "Pending" || tx.status.toUpperCase() === "PENDING") && "bg-amber-500/10 text-amber-400 border border-amber-500/20",
                       tx.status === "Available" && "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20",
                     )}>
                       {tx.status}
