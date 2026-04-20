@@ -153,3 +153,29 @@ export const listEnergyUnit = async (amount: number, price: number, token: strin
     return false;
   }
 };
+
+export const purchaseEnergyUnit = async (listingId: string, token: string): Promise<string | null> => {
+  if (!LAMBDA_URL) {
+    console.error("[API] NEXT_PUBLIC_LAMBDA_URL is missing. Purchase failed.");
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${LAMBDA_URL}/buy`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ listingId })
+    });
+
+    if (!res.ok) throw new Error(`Purchase failed with status ${res.status}`);
+    
+    const data = await res.json();
+    return data.transactionId || "TX-SUCCESS";
+  } catch (error) {
+    console.error("[API] Error purchasing energy:", error);
+    return null;
+  }
+};
