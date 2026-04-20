@@ -1,15 +1,29 @@
 "use client";
 
-import { fetchEnergyTelemetry } from "@/lib/api";
+import { fetchEnergyTelemetry, fetchUserLedger } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
-import { Zap, BatteryCharging, ArrowUpRight, ArrowDownRight, AlertTriangle } from "lucide-react";
+import { Zap, BatteryCharging, ArrowUpRight, ArrowDownRight, AlertTriangle, Database } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/components/auth/AuthContext";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 export default function Dashboard() {
+  const { userId, isAuthenticated } = useAuth();
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['telemetry'],
     queryFn: fetchEnergyTelemetry,
+  });
+
+  const { data: ledger = [], isLoading: isLoadingLedger } = useQuery({
+    queryKey: ['ledger', userId],
+    queryFn: async () => {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString() || "";
+      return fetchUserLedger(token);
+    },
+    enabled: isAuthenticated,
   });
 
   if (isError) {
@@ -27,6 +41,9 @@ export default function Dashboard() {
   const currentCons = lastEntry?.consumed ?? 0;
   const net = currentGen - currentCons;
 
+  // Calculate Total Energy from Ledger (Cumulative Storage)
+  const totalEnergy = ledger.reduce((acc, tx) => acc + (tx.amount || 0), 0);
+
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
       <div className="mb-8">
@@ -34,11 +51,12 @@ export default function Dashboard() {
         <p className="text-gray-400">Real-time monitoring of your node's performance.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
           { title: "Generated", val: currentGen.toFixed(1), unit: "kWh", icon: Zap, color: "text-emerald-400", bg: "bg-[rgba(16,185,129,0.1)]", trend: "+12%" },
           { title: "Consumed", val: currentCons.toFixed(1), unit: "kWh", icon: BatteryCharging, color: "text-amber-400", bg: "bg-[rgba(245,158,11,0.1)]", trend: "-2%" },
-          { title: "Net Export", val: net.toFixed(1), unit: "kWh", icon: net >= 0 ? ArrowUpRight : ArrowDownRight, color: net >= 0 ? "text-cyan-400" : "text-rose-400", bg: net >= 0 ? "bg-[rgba(6,182,212,0.1)]" : "bg-[rgba(244,63,94,0.1)]", trend: "+5%" }
+          { title: "Net Export", val: net.toFixed(1), unit: "kWh", icon: net >= 0 ? ArrowUpRight : ArrowDownRight, color: net >= 0 ? "text-cyan-400" : "text-rose-400", bg: net >= 0 ? "bg-[rgba(6,182,212,0.1)]" : "bg-[rgba(244,63,94,0.1)]", trend: "+5%" },
+          { title: "Total Storage", val: totalEnergy.toFixed(1), unit: "kWh", icon: Database, color: "text-indigo-400", bg: "bg-[rgba(129,140,248,0.1)]", trend: "Lifetime" }
         ].map((stat, i) => (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -57,7 +75,7 @@ export default function Dashboard() {
             </div>
             <div>
               <h3 className="text-gray-400 text-sm font-medium mb-1">{stat.title}</h3>
-              {isLoading ? (
+              {isLoading || isLoadingLedger ? (
                 <div className="h-8 bg-white/10 rounded animate-pulse w-24 mt-2" />
               ) : (
                 <div className="text-3xl font-bold text-white tracking-tight">

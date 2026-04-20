@@ -50,7 +50,45 @@ export const fetchEnergyTelemetry = async (): Promise<EnergyData[]> => {
   return MOCK_ENERGY;
 };
 
-export const fetchTransactions = async (): Promise<Transaction[]> => {
+export const fetchUserLedger = async (token: string): Promise<Transaction[]> => {
+  if (!LAMBDA_URL) {
+    console.error("[API] NEXT_PUBLIC_LAMBDA_URL is missing. Returning mock ledger.");
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    return MOCK_LEDGER;
+  }
+
+  try {
+    const res = await fetch(`${LAMBDA_URL}/ledger`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!res.ok) throw new Error(`Ledger fetch failed with status ${res.status}`);
+
+    const data = await res.json();
+
+    // Data Sanitization & Mapping: energyKWh -> amount
+    return data.map((item: any) => ({
+      ...item,
+      id: item.transactionId || item.id,
+      amount: Number(item.energyKWh || item.amount || 0),
+      price: Number(item.price || 0),
+      type: item.type?.toLowerCase() || "buy",
+      status: item.status || "Settled",
+      date: item.date || item.timestamp || new Date().toISOString()
+    }));
+  } catch (error) {
+    console.error("[API] Error fetching ledger:", error);
+    return [];
+  }
+};
+
+export const fetchTransactions = async (token?: string): Promise<Transaction[]> => {
+  if (token) return fetchUserLedger(token);
+  
   if (LAMBDA_URL) {
     const res = await fetch(`${LAMBDA_URL}/transactions`);
     if (!res.ok) throw new Error("Failed to fetch transactions");

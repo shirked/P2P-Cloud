@@ -1,18 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { fetchTransactions } from "@/lib/api";
+import { fetchUserLedger } from "@/lib/api";
 import { Transaction } from "@/types";
-import { ArrowDownLeft, ArrowUpRight, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/components/auth/AuthContext";
+import { fetchAuthSession } from "aws-amplify/auth";
+import { ArrowDownLeft, ArrowUpRight, ArrowDownToLine, ArrowUpFromLine, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 
 export default function Ledger() {
-  const [txs, setTxs] = useState<Transaction[]>([]);
+  const { userId, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    fetchTransactions().then(setTxs);
-  }, []);
+  const { data: txs = [], isLoading } = useQuery({
+    queryKey: ['ledger', userId],
+    queryFn: async () => {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString() || "";
+      return fetchUserLedger(token);
+    },
+    enabled: isAuthenticated,
+  });
 
   const getIcon = (type: Transaction['type']) => {
     switch (type) {
@@ -82,10 +90,20 @@ export default function Ledger() {
                   </td>
                 </tr>
               ))}
-              {!txs.length && (
+              {isLoading && (
                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-gray-500">
-                      Syncing with DynamoDB...
+                    <td colSpan={6} className="py-20 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="h-8 w-8 text-emerald-400 animate-spin opacity-50" />
+                        <p className="text-gray-500 text-sm">Syncing with DynamoDB...</p>
+                      </div>
+                    </td>
+                 </tr>
+              )}
+              {!isLoading && !txs.length && (
+                 <tr>
+                    <td colSpan={6} className="py-20 text-center text-gray-500">
+                      No transaction history found.
                     </td>
                  </tr>
               )}
