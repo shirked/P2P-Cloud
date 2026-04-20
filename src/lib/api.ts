@@ -1,6 +1,6 @@
 import { EnergyData, Transaction } from "@/types";
 
-const LAMBDA_URL = process.env.NEXT_PUBLIC_LAMBDA_URL;
+const LAMBDA_URL = process.env.NEXT_PUBLIC_LAMBDA_URL?.replace(/\/$/, "");
 
 // --- Mock Data ---
 
@@ -26,9 +26,24 @@ const MOCK_LEDGER: Transaction[] = [
 
 export const fetchEnergyTelemetry = async (): Promise<EnergyData[]> => {
   if (LAMBDA_URL) {
-    const res = await fetch(`${LAMBDA_URL}/telemetry`);
-    if (!res.ok) throw new Error("Failed to fetch telemetry");
-    return res.json();
+    try {
+      const res = await fetch(`${LAMBDA_URL}/telemetry`);
+      if (!res.ok) throw new Error("Failed to fetch telemetry");
+      const data = await res.json();
+      
+      console.log("[API] Telemetry Data Received:", data);
+
+      // Defensive check: Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.warn("[API] Unexpected telemetry structure. Returning empty array.");
+        return [];
+      }
+
+      return data;
+    } catch (err) {
+      console.error("[API] Telemetry fetch error:", err);
+      return [];
+    }
   }
   // Fallback to Mock
   await new Promise((resolve) => setTimeout(resolve, 600));

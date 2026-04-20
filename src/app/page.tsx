@@ -22,8 +22,9 @@ export default function Dashboard() {
     );
   }
 
-  const currentGen = data ? data[data.length - 1].generated : 0;
-  const currentCons = data ? data[data.length - 1].consumed : 0;
+  const lastEntry = data?.[data.length - 1];
+  const currentGen = lastEntry?.generated ?? 0;
+  const currentCons = lastEntry?.consumed ?? 0;
   const net = currentGen - currentCons;
 
   return (
