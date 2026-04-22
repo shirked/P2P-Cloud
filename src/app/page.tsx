@@ -1,30 +1,14 @@
 "use client";
 
-import { fetchEnergyTelemetry, fetchUserLedger } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { Zap, BatteryCharging, ArrowUpRight, ArrowDownRight, AlertTriangle, Database } from "lucide-react";
 import { motion } from "framer-motion";
-import { useAuth } from "@/components/auth/AuthContext";
-import { fetchAuthSession } from "aws-amplify/auth";
+import { useLedger } from "@/hooks/useLedger";
+import { useTelemetry } from "@/hooks/useTelemetry";
 
 export default function Dashboard() {
-  const { userId, isAuthenticated } = useAuth();
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['telemetry'],
-    queryFn: fetchEnergyTelemetry,
-  });
-
-  const { data: ledger = [], isLoading: isLoadingLedger } = useQuery({
-    queryKey: ['ledger', userId],
-    queryFn: async () => {
-      const session = await fetchAuthSession();
-      const token = session.tokens?.idToken?.toString() || "";
-      return fetchUserLedger(token);
-    },
-    enabled: isAuthenticated,
-  });
+  const { data, isLoading, isError } = useTelemetry();
+  const { data: ledger = [], isLoading: isLoadingLedger } = useLedger();
 
   if (isError) {
     return (

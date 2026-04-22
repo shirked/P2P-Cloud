@@ -1,28 +1,17 @@
 "use client";
 
-import { fetchUserLedger } from "@/lib/api";
 import { Transaction } from "@/types";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
-import { fetchAuthSession } from "aws-amplify/auth";
+import { useLedger } from "@/hooks/useLedger";
 import { ArrowDownLeft, ArrowUpRight, ArrowDownToLine, ArrowUpFromLine, Loader2, Database } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 
 export default function Ledger() {
-  const { userId, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  const { data: txs = [], isLoading } = useQuery({
-    queryKey: ['ledger', userId],
-    queryFn: async () => {
-      const session = await fetchAuthSession();
-      const token = session.tokens?.idToken?.toString() || "";
-      return fetchUserLedger(token);
-    },
-    enabled: isAuthenticated,
-  });
+  const { data: txs = [], isLoading } = useLedger();
 
-  const getIcon = (type: Transaction['type']) => {
     switch (type) {
       case 'buy': return <ArrowDownLeft className="h-4 w-4 text-emerald-400" />;
       case 'sell': return <ArrowUpRight className="h-4 w-4 text-cyan-400" />;

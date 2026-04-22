@@ -1,4 +1,5 @@
 import { EnergyData, Transaction } from "@/types";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 const LAMBDA_URL = process.env.NEXT_PUBLIC_LAMBDA_URL?.replace(/\/$/, "");
 
@@ -26,7 +27,16 @@ const MOCK_LEDGER: Transaction[] = [
 export const fetchEnergyTelemetry = async (): Promise<EnergyData | null> => {
   if (LAMBDA_URL) {
     try {
-      const res = await fetch(`${LAMBDA_URL}/telemetry`);
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString() || "";
+
+      const res = await fetch(`${LAMBDA_URL}/telemetry`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
       if (!res.ok) throw new Error("Failed to fetch telemetry");
       const data = await res.json();
       
@@ -49,7 +59,7 @@ export const fetchEnergyTelemetry = async (): Promise<EnergyData | null> => {
   return MOCK_ENERGY;
 };
 
-export const fetchUserLedger = async (token: string): Promise<Transaction[]> => {
+export const fetchUserLedger = async (): Promise<Transaction[]> => {
   if (!LAMBDA_URL) {
     console.error("[API] NEXT_PUBLIC_LAMBDA_URL is missing. Returning mock ledger.");
     await new Promise((resolve) => setTimeout(resolve, 800));
@@ -57,6 +67,9 @@ export const fetchUserLedger = async (token: string): Promise<Transaction[]> => 
   }
 
   try {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString() || "";
+
     const res = await fetch(`${LAMBDA_URL}/ledger`, {
       method: "GET",
       headers: {
@@ -102,7 +115,7 @@ export const fetchUserLedger = async (token: string): Promise<Transaction[]> => 
 };
 
 export const fetchTransactions = async (token?: string): Promise<Transaction[]> => {
-  if (token) return fetchUserLedger(token);
+  return fetchUserLedger();
   
   if (LAMBDA_URL) {
     const res = await fetch(`${LAMBDA_URL}/transactions`);
