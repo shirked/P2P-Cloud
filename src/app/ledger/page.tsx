@@ -12,6 +12,7 @@ export default function Ledger() {
 
   const { data: txs = [], isLoading } = useLedger();
 
+  const getIcon = (type: Transaction['type']) => {
     switch (type) {
       case 'buy': return <ArrowDownLeft className="h-4 w-4 text-emerald-400" />;
       case 'sell': return <ArrowUpRight className="h-4 w-4 text-cyan-400" />;
