@@ -8,6 +8,11 @@ export interface EnergyData {
   consumed: TelemetryValue;
   totalStorage: TelemetryValue;
   time?: string;
+  impact?: {
+    co2Saved: string;
+    treesEquivalent: number;
+    gridIndependence: number;
+  };
 }
 
 export interface Transaction {

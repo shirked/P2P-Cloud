@@ -1,7 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
-import { Zap, BatteryCharging, ArrowUpRight, ArrowDownRight, AlertTriangle, Database } from "lucide-react";
+import { Zap, BatteryCharging, ArrowUpRight, ArrowDownRight, AlertTriangle, Database, Leaf, TreePine, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLedger } from "@/hooks/useLedger";
 import { useTelemetry } from "@/hooks/useTelemetry";
@@ -29,10 +28,15 @@ export default function Dashboard() {
   // Calculate Total Energy from Ledger (Cumulative Storage)
   const totalEnergy = ledger.reduce((acc, tx) => acc + (tx.amount || 0), 0);
 
-  // Fake Array Trick: Wrap single point in an array for AreaChart continuity
-  const chartData = data ? [
-    { ...data, time: "Live", generated: currentGen, consumed: currentCons }
-  ] : [];
+  // Extract impact variables
+  const co2Saved = data?.impact?.co2Saved || "0.00 kg";
+  const treesEq = data?.impact?.treesEquivalent ?? 0;
+  const gridIndep = data?.impact?.gridIndependence ?? 0;
+
+  // Grid Independence SVG setup
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (gridIndep / 100) * circumference;
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
@@ -83,36 +87,82 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="glass-card rounded-2xl p-6 h-[400px] border border-[rgba(255,255,255,0.05)]"
+        className="mb-8"
       >
-        <h3 className="text-lg font-bold text-white mb-6">Energy Flow </h3>
-        {isLoading ? (
-          <div className="w-full h-full bg-white/5 rounded-xl animate-pulse" />
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorGen" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="colorCons" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-              <Tooltip
-                contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                itemStyle={{ color: '#fff' }}
-              />
-              <Area type="monotone" dataKey="generated" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorGen)" />
-              <Area type="monotone" dataKey="consumed" stroke="#f59e0b" strokeWidth={3} fillOpacity={1} fill="url(#colorCons)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
+        <h3 className="text-xl font-bold text-white mb-6">Sustainability Impact</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Carbon Offset Card */}
+          <div className="glass-card rounded-2xl p-6 border border-emerald-500/20 relative overflow-hidden">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-emerald-500/10 rounded-xl">
+                <Leaf className="h-6 w-6 text-emerald-400" />
+              </div>
+              <h4 className="text-gray-400 font-medium">Carbon Offset</h4>
+            </div>
+            <div className="text-3xl font-bold text-white tracking-tight">
+              {co2Saved}
+            </div>
+            <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-emerald-500 blur-3xl opacity-10" />
+          </div>
+
+          {/* Forest Contribution Card */}
+          <div className="glass-card rounded-2xl p-6 border border-emerald-500/20 relative overflow-hidden">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-emerald-500/10 rounded-xl">
+                <TreePine className="h-6 w-6 text-emerald-400" />
+              </div>
+              <h4 className="text-gray-400 font-medium">Trees Equivalent Saved</h4>
+            </div>
+            <div className="text-3xl font-bold text-white tracking-tight">
+              {treesEq}
+            </div>
+            <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-emerald-500 blur-3xl opacity-10" />
+          </div>
+
+          {/* Grid Autonomy Card */}
+          <div className="glass-card rounded-2xl p-6 border border-emerald-500/20 relative overflow-hidden flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-emerald-500/10 rounded-xl">
+                  <Activity className="h-6 w-6 text-emerald-400" />
+                </div>
+                <h4 className="text-gray-400 font-medium">Grid Autonomy</h4>
+              </div>
+              <div className="text-3xl font-bold text-white tracking-tight">
+                {gridIndep}%
+              </div>
+            </div>
+            
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              <svg className="transform -rotate-90 w-24 h-24">
+                <circle
+                  cx="48"
+                  cy="48"
+                  r={radius}
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  className="text-white/5"
+                />
+                <circle
+                  cx="48"
+                  cy="48"
+                  r={radius}
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  className="text-emerald-400 transition-all duration-1000 ease-out"
+                />
+              </svg>
+            </div>
+            <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-emerald-500 blur-3xl opacity-10" />
+          </div>
+          
+        </div>
       </motion.div>
     </div>
   );
