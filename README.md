@@ -154,6 +154,12 @@ App will run on:
 http://localhost:3000
 ```
 
+Deployed version:-
+
+```
+https://p2p-cloudnative-aws.vercel.app/
+```
+
 ---
 
 ## 🧪 Mock Data Handling
