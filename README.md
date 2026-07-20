@@ -1,6 +1,6 @@
-# ⚡ Cloud-Based Peer-to-Peer Energy Trading Platform
+# ⚡ Cloud-Native Energy Trading Platform
 
-A modern cloud-powered web application that enables users to simulate **peer-to-peer energy trading** through a secure, scalable, and interactive dashboard. The platform allows users to monitor energy usage, track transactions, and participate in buying/selling energy units using a centralized cloud backend.
+A modern cloud-powered web application that enables users to simulate **simulated energy trading** through a secure, scalable, and interactive dashboard. The platform allows users to monitor energy usage, track transactions, and participate in buying/selling energy units using a centralized cloud backend.
 
 ---
 
@@ -74,7 +74,7 @@ AWS Cognito  →  Authentication & JWT Tokens
 AWS Lambda (Backend Logic)
         │
         ▼
-Data Source (Ledger + Energy Data)
+DynamoDB (Ledger + Energy Data)
 ```
 
 ### Key Components:
@@ -95,7 +95,7 @@ Data Source (Ledger + Energy Data)
 | State Mgmt     | React Query                |
 | Authentication | AWS Cognito                |
 | Backend API    | AWS Lambda                 |
-| Cloud Config   | AWS Amplify                |
+| Deployment     | Vercel                     |
 | Styling        | CSS / Component-based UI   |
 
 ---
